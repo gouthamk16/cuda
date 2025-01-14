@@ -1,0 +1,32 @@
+Fluid Dynamics Simulations Using CUDA
+
+Overview: Fluid dynamics simulations model the motion of fluids (liquids and gases) using numerical solutions to the Navier-Stokes equations. These simulations are computationally intensive, involving large grids and iterative solvers.
+
+Key Steps:
+
+Discretize the Domain:
+
+    Divide the simulation domain into a grid (e.g., finite difference or finite volume method).
+    Use CUDA to process grid cells in parallel.
+
+Solve Navier-Stokes Equations:
+
+    Implement equations for continuity, momentum, and energy conservation.
+    Use techniques like the SIMPLE (Semi-Implicit Method for Pressure-Linked Equations) algorithm.
+
+Optimization Techniques:
+
+    Shared Memory: Store intermediate results locally to reduce global memory access latency.
+    Tiling: Divide the grid into smaller tiles that fit in shared memory.
+    Parallel Reduction: Use this for summations, e.g., calculating divergence or residuals.
+
+Applications:
+
+    Smoke or fire simulations in graphics.
+    Weather prediction models.
+    Simulations of airflow over objects (e.g., cars, planes).
+
+Tools and Libraries:
+
+    CUDA Thrust for parallel operations.
+    Visualization tools like ParaView or Matplotlib for results.
