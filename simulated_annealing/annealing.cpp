@@ -1,5 +1,3 @@
-// Simulated annealing
-
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -14,86 +12,80 @@ vector<float> generateUniformRandomNumbers(int n, float min, float max) {
     uniform_real_distribution<float> dis(min, max);
 
     vector<float> randomNumbers;
-    for (int i=0; i<n; i++) {
+    for (int i = 0; i < n; i++) {
         randomNumbers.push_back(dis(gen));
     }
     return randomNumbers;
 }
 
-// Defining the objective function - 3 params: x, y, and z
+// Defining the objective function
 float objective_function(vector<float> &params) {
     float x = params[0];
     float y = params[1];
     float z = params[2];
-    return pow((x-1), 2) + pow((y-5), 2) + pow((z+6), 2);
+    return pow((x - 1), 2) + pow((y - 5), 2) + pow((z + 6), 2);
 }
 
 // Simulated annealing algorithm
 vector<float> simulated_annealing(vector<vector<float>> &bounds, float init_temp, float final_temp, float cooling_rate) {
-    
-    // Initialize the current solution and temperature
-    int num_params = bounds[0].size();// Shape of the rows of the bounds array
+    int num_params = bounds.size();
 
-    // Initialize the current solution and temperature
+    // Initialize the current solution
     vector<float> current_params;
-    for (int i=0; i<num_params; i++) {
+    for (int i = 0; i < num_params; i++) {
         vector<float> random_num = generateUniformRandomNumbers(1, bounds[i][0], bounds[i][1]);
         current_params.push_back(random_num[0]);
     }
     float current_solution = objective_function(current_params);
     float current_temp = init_temp;
-    vector<float> temperatures = {current_temp};
 
     // Iterate until the temperature is below the final temperature
-    while (current_temp < final_temp) {
-        // Perturb the current solution
-        vector<float> perturbed_params;
-        for (int i=0; i<num_params; i++) {
-            vector<float> random_num = generateUniformRandomNumbers(1, bounds[i][0], bounds[i][1]);
-            perturbed_params.push_back(random_num[0]);
+    while (current_temp > final_temp) {
+        vector<float> perturbed_params = current_params;
+        for (int i = 0; i < num_params; i++) {
+            // Add small perturbations
+            float noise = generateUniformRandomNumbers(1, -0.1, 0.1)[0];
+            perturbed_params[i] += noise;
+            // Ensure bounds are respected
+            perturbed_params[i] = max(bounds[i][0], min(bounds[i][1], perturbed_params[i]));
         }
+
         float perturbed_solution = objective_function(perturbed_params);
 
-        // Calculate delta -> change in solution quality
+        // Calculate delta
         float delta = perturbed_solution - current_solution;
 
-        // Check if the perturbed solution is better, if so make it the new current solution
-        if (delta < 0) {
+        // Decide whether to accept the new solution
+        if (delta < 0 || exp(-delta / current_temp) > generateUniformRandomNumbers(1, 0, 1)[0]) {
             current_params = perturbed_params;
             current_solution = perturbed_solution;
         }
 
-        // If the perturbed solution is worse, accept it with a certain probablity that decreases with worser solutions
-        else {
-            float prob = exp(-delta / current_temp);
-            vector<float> random_num = generateUniformRandomNumbers(1, 0, 1);
-            if (random_num[0] < prob) {
-                current_params = perturbed_params;
-                current_solution = perturbed_solution;
-            }
-        }
-
-        // Decrease the temperature according to the cooling rate
+        // Decrease the temperature
         current_temp *= cooling_rate;
-        temperatures.push_back(current_temp);
     }
 
-    return current_params, current_solution, temperatures;
-}
-
-vector<float> arange(float lower_bound, float upper_bound, float step) {
-    vector<float> output;
-    for (float i=lower_bound; i<=upper_bound; i+=step) {
-        output.push_back(i);
-    }
-    return output;
+    return current_params;
 }
 
 int main() {
-    // Defining the range of input params
-    vector<float> x_range = arange(-10, 10, 0.1);
-    vector<float> y_range = arange(-10, 10, 0.1);
-    vector<float> z_range = arange(-10, 10, 0.1);
+    vector<vector<float>> bounds = {{-10, 10}, {-10, 10}, {-10, 10}};
 
-    
+    // Simulated annealing
+    float init_temp = 100;
+    float final_temp = 0.1;
+    float cooling_rate = 0.95;
+
+    vector<float> solution = simulated_annealing(bounds, init_temp, final_temp, cooling_rate);
+
+    // Print the solution
+    cout << "Final Parameters: ";
+    for (float param : solution) {
+        cout << param << " ";
+    }
+    cout << endl;
+
+    cout << "Final Solution: " << objective_function(solution) << endl;
+
+    return 0;
 }
