@@ -2,13 +2,12 @@
 #include <vector>
 #include <cmath>
 #include <random>
+#include <chrono>
 
 using namespace std;
 
 // Random number generator
-vector<float> generateUniformRandomNumbers(int n, float min, float max) {
-    random_device rd; // Seed Generator
-    mt19937 gen(rd());
+vector<float> generateUniformRandomNumbers(mt19937& gen, int n, float min, float max) {
     uniform_real_distribution<float> dis(min, max);
 
     vector<float> randomNumbers;
@@ -30,10 +29,13 @@ float objective_function(vector<float> &params) {
 vector<float> simulated_annealing(vector<vector<float>> &bounds, float init_temp, float final_temp, float cooling_rate) {
     int num_params = bounds.size();
 
+    random_device rd;
+    mt19937 gen(rd());
+
     // Initialize the current solution
     vector<float> current_params;
     for (int i = 0; i < num_params; i++) {
-        vector<float> random_num = generateUniformRandomNumbers(1, bounds[i][0], bounds[i][1]);
+        vector<float> random_num = generateUniformRandomNumbers(gen, 1, bounds[i][0], bounds[i][1]);
         current_params.push_back(random_num[0]);
     }
     float current_solution = objective_function(current_params);
@@ -44,7 +46,7 @@ vector<float> simulated_annealing(vector<vector<float>> &bounds, float init_temp
         vector<float> perturbed_params = current_params;
         for (int i = 0; i < num_params; i++) {
             // Add small perturbations
-            float noise = generateUniformRandomNumbers(1, -0.1, 0.1)[0];
+            float noise = generateUniformRandomNumbers(gen, 1, -0.1, 0.1)[0];
             perturbed_params[i] += noise;
             // Ensure bounds are respected
             perturbed_params[i] = max(bounds[i][0], min(bounds[i][1], perturbed_params[i]));
@@ -56,7 +58,7 @@ vector<float> simulated_annealing(vector<vector<float>> &bounds, float init_temp
         float delta = perturbed_solution - current_solution;
 
         // Decide whether to accept the new solution
-        if (delta < 0 || exp(-delta / current_temp) > generateUniformRandomNumbers(1, 0, 1)[0]) {
+        if (delta < 0 || exp(-delta / current_temp) > generateUniformRandomNumbers(gen, 1, 0, 1)[0]) {
             current_params = perturbed_params;
             current_solution = perturbed_solution;
         }
